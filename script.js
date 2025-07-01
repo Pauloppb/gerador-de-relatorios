@@ -38,25 +38,26 @@ document.addEventListener('DOMContentLoaded', () => {
     campoResultado.value = 'Aguarde um instante, a Inteligência Artificial está trabalhando...';
 
     try {
-      // MUDANÇA IMPORTANTE: Agora chamamos a nossa própria API
-      const url = '/api/generate'; // Caminho para a nossa função serverless
+      const url = '/api/generate';
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ conversa: conversa }) // Enviamos apenas a conversa
+        body: JSON.stringify({ conversa: conversa })
       });
 
-      const data = await response.json();
-
+      // ---- CORREÇÃO IMPORTANTE AQUI ----
+      // Primeiro, verificamos se a requisição foi bem-sucedida.
       if (!response.ok) {
-        // Se a resposta não foi OK, pegamos o erro que nosso servidor enviou
-        throw new Error(data.error || 'Ocorreu um erro desconhecido.');
+        // Se não foi (ex: erro 404 ou 500), lemos a resposta como TEXTO.
+        const errorText = await response.text();
+        throw new Error(`O servidor respondeu com erro ${response.status}. Detalhes: ${errorText}`);
       }
       
-      // Pegamos o relatório do corpo da resposta do nosso servidor
+      // Apenas se a resposta foi OK, tentamos ler como JSON.
+      const data = await response.json();
       const relatorioGerado = data.report;
       campoResultado.value = relatorioGerado.trim();
 
