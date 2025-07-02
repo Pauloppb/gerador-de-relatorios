@@ -38,17 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
     campoResultado.value = 'Aguarde um instante, a Inteligência Artificial está trabalhando...';
 
     try {
-      const url = '/api/generate';
+      // MUDANÇA IMPORTANTE: Agora chamamos a nossa própria API
+      const url = '/api/generate'; // Caminho para a nossa função serverless
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ conversa: conversa })
+        body: JSON.stringify({ conversa: conversa }) // Enviamos apenas a conversa
       });
 
-      // ---- CORREÇÃO IMPORTANTE AQUI ----
+      // CORREÇÃO IMPORTANTE AQUI
       // Primeiro, verificamos se a requisição foi bem-sucedida.
       if (!response.ok) {
         // Se não foi (ex: erro 404 ou 500), lemos a resposta como TEXTO.
@@ -72,4 +73,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   botaoGerar.addEventListener('click', gerarRelatorio);
+
+  // ### ALTERAÇÃO 1: LÓGICA DO BOTÃO COPIAR ###
+  const botaoCopiar = document.getElementById('copiar-btn');
+  botaoCopiar.addEventListener('click', () => {
+    // Verifica se há texto para copiar
+    if (campoResultado.value.trim() === '') {
+      alert('Não há nada para copiar ainda.');
+      return;
+    }
+
+    // Usa a API do navegador para copiar o texto
+    navigator.clipboard.writeText(campoResultado.value)
+      .then(() => {
+        // Sucesso!
+        alert('Relatório copiado para a área de transferência!');
+      })
+      .catch(err => {
+        // Erro
+        console.error('Erro ao copiar o texto: ', err);
+        alert('Ocorreu um erro ao tentar copiar o texto.');
+      });
+  });
+
+  // ### ALTERAÇÃO 2: LÓGICA DO BOTÃO LIMPAR ###
+  const botaoLimpar = document.getElementById('limpar-btn');
+  botaoLimpar.addEventListener('click', () => {
+    campoConversa.value = '';
+    campoResultado.value = '';
+    // Opcional: focar na primeira caixa de texto após limpar
+    campoConversa.focus();
+  });
 });
