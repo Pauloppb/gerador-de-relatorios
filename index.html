@@ -12,17 +12,17 @@
       padding: 0;
     }
 
-    /* --- ESTILO PRINCIPAL DA PÁGINA --- */
+    /* ### ALTERAÇÃO 1: FUNDO IDÊNTICO AO MODELO ### */
     body {
       font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0d2c54; /* Cor de fundo azul escuro do exemplo */
+      /* Copiado diretamente do modelo para um fundo gradiente idêntico */
+      background-image: linear-gradient(to right top, #051937, #002364, #002b91, #002ebe, #0a28e9);
       color: #333;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
 
-    /* O main ocupa todo o espaço disponível, empurrando o footer para baixo */
     main {
       flex: 1;
       display: flex;
@@ -44,7 +44,7 @@
     /* --- ELEMENTOS DO FORMULÁRIO (Títulos, Textos, etc.) --- */
     h1 {
       font-size: 26px;
-      color: #0d2c54; /* Título com a cor azul escura */
+      color: #0d2c54;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -95,18 +95,21 @@
     .icon {
       width: 20px;
       height: 20px;
-      fill: currentColor; /* O ícone terá a mesma cor do texto do botão */
+      fill: currentColor;
       flex-shrink: 0;
     }
 
-    /* --- RODAPÉ --- */
+    /* ### ALTERAÇÃO 2: RODAPÉ IDÊNTICO AO MODELO ### */
     footer {
       width: 100%;
-      background-color: #1a1a1a;
-      color: #aaa;
       text-align: center;
-      padding: 15px 0;
-      font-size: 12px;
+      padding: 10px; /* Um pouco mais de preenchimento para ficar mais bonito */
+      background-color: #333; /* Copiado do modelo */
+      color: white; /* Copiado do modelo */
+      position: fixed; /* Copiado do modelo para ficar "colado" embaixo */
+      bottom: 0;
+      left: 0;
+      font-size: 14px; /* Copiado do modelo */
     }
 
   </style>
