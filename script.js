@@ -1,107 +1,88 @@
 // =======================================================
-// LÓGICA PARA O TEMA (CLARO/ESCURO)
-// =======================================================
-function toggleTheme() {
-  const body = document.body;
-  const currentTheme = body.getAttribute("data-theme");
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  body.setAttribute("data-theme", newTheme);
-  localStorage.setItem("preferred-theme", newTheme);
-}
-
-function loadTheme() {
-  const savedTheme = localStorage.getItem("preferred-theme");
-  if (savedTheme) {
-    document.body.setAttribute("data-theme", savedTheme);
-  }
-}
-
-// =======================================================
 // LÓGICA PRINCIPAL DO GERADOR DE RELATÓRIO
 // =======================================================
 document.addEventListener('DOMContentLoaded', () => {
-  loadTheme();
+    
+    // ### ALTERAÇÃO FEITA AQUI ###
+    // Esta linha encontra o elemento do ano no rodapé e insere o ano atual.
+    document.getElementById('current-year').textContent = new Date().getFullYear();
 
-  const botaoGerar = document.getElementById('gerar-btn');
-  const campoConversa = document.getElementById('conversa');
-  const campoResultado = document.getElementById('resultado');
+    // --- CONFIGURAÇÃO INICIAL DO GERADOR ---
+    const botaoGerar = document.getElementById('gerar-btn');
+    const botaoGerarTexto = document.getElementById('gerar-btn-text'); // Mantido para efeitos visuais
+    const campoConversa = document.getElementById('conversa');
+    const campoResultado = document.getElementById('resultado');
+    const botaoCopiar = document.getElementById('copiar-btn');
+    const botaoLimpar = document.getElementById('limpar-btn');
 
-  async function gerarRelatorio() {
-    const conversa = campoConversa.value;
-    if (conversa.trim() === '') {
-      alert('Por favor, cole a conversa na primeira caixa de texto.');
-      return;
+    // --- FUNÇÃO PRINCIPAL PARA GERAR O RELATÓRIO ---
+    async function gerarRelatorio() {
+        const conversa = campoConversa.value;
+
+        if (conversa.trim() === '') {
+            alert('Por favor, cole a conversa na primeira caixa de texto.');
+            return;
+        }
+        
+        // Efeito visual de "carregando"
+        botaoGerar.disabled = true;
+        botaoGerarTexto.innerHTML = '<i class="fas fa-circle-notch icon-spin mr-2"></i> Gerando...';
+
+        campoResultado.value = 'Aguarde um instante, a Inteligência Artificial está trabalhando...';
+
+        try {
+            const url = '/api/generate';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conversa: conversa })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`O servidor respondeu com erro ${response.status}. Detalhes: ${errorText}`);
+            }
+            
+            const data = await response.json();
+            campoResultado.value = data.report.trim();
+
+        } catch (error) {
+            console.error("Ocorreu um erro:", error);
+            campoResultado.value = `Ocorreu um erro ao gerar o relatório. Detalhes: ${error.message}`;
+            alert('Houve um erro. Verifique o console (F12) para mais detalhes.');
+        } finally {
+            // Restaura o botão ao estado normal
+            botaoGerar.disabled = false;
+            botaoGerarTexto.innerHTML = '<i class="fas fa-magic mr-2"></i> Gerar Relatório';
+        }
     }
 
-    botaoGerar.disabled = true;
-    botaoGerar.innerText = 'Gerando...';
-    campoResultado.value = 'Aguarde um instante, a Inteligência Artificial está trabalhando...';
+    botaoGerar.addEventListener('click', gerarRelatorio);
 
-    try {
-      // MUDANÇA IMPORTANTE: Agora chamamos a nossa própria API
-      const url = '/api/generate'; // Caminho para a nossa função serverless
+    // --- LÓGICA DO BOTÃO LIMPAR ---
+    botaoLimpar.addEventListener('click', () => {
+        campoConversa.value = '';
+        campoResultado.value = '';
+        campoConversa.focus();
+    });
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ conversa: conversa }) // Enviamos apenas a conversa
-      });
-
-      // CORREÇÃO IMPORTANTE AQUI
-      // Primeiro, verificamos se a requisição foi bem-sucedida.
-      if (!response.ok) {
-        // Se não foi (ex: erro 404 ou 500), lemos a resposta como TEXTO.
-        const errorText = await response.text();
-        throw new Error(`O servidor respondeu com erro ${response.status}. Detalhes: ${errorText}`);
-      }
-      
-      // Apenas se a resposta foi OK, tentamos ler como JSON.
-      const data = await response.json();
-      const relatorioGerado = data.report;
-      campoResultado.value = relatorioGerado.trim();
-
-    } catch (error) {
-      console.error("Ocorreu um erro:", error);
-      campoResultado.value = `Ocorreu um erro ao gerar o relatório. Detalhes: ${error.message}`;
-      alert('Houve um erro. Verifique o console (F12) para mais detalhes.');
-    } finally {
-      botaoGerar.disabled = false;
-      botaoGerar.innerText = 'Gerar Relatório';
-    }
-  }
-
-  botaoGerar.addEventListener('click', gerarRelatorio);
-
-  // ### ALTERAÇÃO 1: LÓGICA DO BOTÃO COPIAR ###
-  const botaoCopiar = document.getElementById('copiar-btn');
-  botaoCopiar.addEventListener('click', () => {
-    // Verifica se há texto para copiar
-    if (campoResultado.value.trim() === '') {
-      alert('Não há nada para copiar ainda.');
-      return;
-    }
-
-    // Usa a API do navegador para copiar o texto
-    navigator.clipboard.writeText(campoResultado.value)
-      .then(() => {
-        // Sucesso!
-        alert('Relatório copiado para a área de transferência!');
-      })
-      .catch(err => {
-        // Erro
-        console.error('Erro ao copiar o texto: ', err);
-        alert('Ocorreu um erro ao tentar copiar o texto.');
-      });
-  });
-
-  // ### ALTERAÇÃO 2: LÓGICA DO BOTÃO LIMPAR ###
-  const botaoLimpar = document.getElementById('limpar-btn');
-  botaoLimpar.addEventListener('click', () => {
-    campoConversa.value = '';
-    campoResultado.value = '';
-    // Opcional: focar na primeira caixa de texto após limpar
-    campoConversa.focus();
-  });
+    // --- LÓGICA DO BOTÃO COPIAR COM EFEITO VISUAL ---
+    botaoCopiar.addEventListener('click', () => {
+        if (campoResultado.value.trim() === '') {
+            alert('Não há nada para copiar ainda.');
+            return;
+        }
+        navigator.clipboard.writeText(campoResultado.value)
+            .then(() => {
+                const originalText = botaoCopiar.innerHTML;
+                botaoCopiar.innerHTML = '<i class="fas fa-check mr-1"></i> Copiado!';
+                
+                setTimeout(() => {
+                    botaoCopiar.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Erro ao copiar o texto: ', err);
+            });
+    });
 });
