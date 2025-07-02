@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -149,12 +148,16 @@
 
     <textarea id="conversa" placeholder="Cole a conversa do chat aqui..."></textarea>
 
-    <div style="margin-top: 20px; margin-bottom: 30px;">
+    <div style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 30px;">
       <button id="gerar-btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
           <path d="M5 20h14v-2H5v2zm7-18L5.33 9h4.34v4h4.66V9h4.34L12 2z"/>
         </svg>
         Gerar Relatório
+      </button>
+
+      <button id="limpar-btn" style="background-color: #6c757d;">
+        🧹 Limpar
       </button>
     </div>
 
@@ -166,6 +169,10 @@
       </svg>
       Relatório Gerado
     </h2>
+
+    <button id="copiar-btn" style="margin-bottom: 10px; background-color: #28a745;">
+      📋 Copiar Relatório
+    </button>
 
     <textarea id="resultado" readonly placeholder="Seu relatório formatado aparecerá aqui..."></textarea>
   </div>
