@@ -5,49 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gerador de Relatório de Atendimento</title>
   <style>
-    :root {
-      --bg: #ffffff;
-      --text: #1c1e21;
-      --primary: #0057c2;
-      --box: #f9f9f9;
-      --border: #ccd0d5;
-      --shadow: rgba(0, 0, 0, 0.06);
-    }
-
-    [data-theme="dark"] {
-      --bg: #1e1f23;
-      --text: #e4e6eb;
-      --primary: #3b8eff;
-      --box: #2c2f33;
-      --border: #3a3b3c;
-      --shadow: rgba(0, 0, 0, 0.3);
-    }
-
+    /* --- RESET E CONFIGURAÇÕES GERAIS --- */
     * {
-      transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
+    /* ### ALTERAÇÃO 1: FUNDO IDÊNTICO AO MODELO ### */
     body {
       font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
+      /* Copiado diretamente do modelo para um fundo gradiente idêntico */
+      background-image: linear-gradient(to right top, #051937, #002364, #002b91, #002ebe, #0a28e9);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 40px 20px;
     }
 
+    /* --- CONTAINER BRANCO --- */
     .container {
+      width: 100%;
       max-width: 800px;
-      margin: 0 auto;
-      background-color: var(--box);
+      background-color: #ffffff;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 8px 20px var(--shadow);
-      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-
+    
+    /* --- ELEMENTOS DO FORMULÁRIO (Títulos, Textos, etc.) --- */
     h1 {
       font-size: 26px;
-      color: var(--primary);
+      color: #0d2c54;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -56,6 +53,7 @@
     p {
       font-size: 15px;
       margin-bottom: 20px;
+      color: #555;
     }
 
     textarea {
@@ -63,112 +61,108 @@
       height: 200px;
       padding: 12px;
       border-radius: 8px;
-      border: 1px solid var(--border);
+      border: 1px solid #ccd0d5;
       font-size: 14px;
       resize: vertical;
-      box-sizing: border-box;
-      background-color: var(--bg);
-      color: var(--text);
+      font-family: inherit;
     }
 
     textarea:focus {
       outline: none;
-      border-color: var(--primary);
-      background-color: var(--box);
+      border-color: #0d2c54;
     }
 
+    /* --- ESTILO DOS BOTÕES --- */
     button {
       padding: 12px 24px;
       font-size: 16px;
       font-weight: bold;
       color: #fff;
-      background-color: var(--primary);
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(24, 119, 242, 0.2);
-      transition: background-color 0.3s, transform 0.2s;
+      transition: opacity 0.2s;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
+    
     button:hover {
-      background-color: #166fe5;
-      transform: scale(1.02);
+        opacity: 0.9;
     }
 
-    hr {
-      margin: 30px 0;
-      border: none;
-      border-top: 1px solid var(--border);
-    }
-
-    h2 {
-      font-size: 20px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    /* --- ÍCONES (para os botões) --- */
     .icon {
       width: 20px;
       height: 20px;
-      fill: var(--primary);
+      fill: currentColor;
       flex-shrink: 0;
     }
 
-    .theme-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background-color: transparent;
-      color: var(--primary);
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      text-decoration: underline;
+    /* ### ALTERAÇÃO 2: RODAPÉ IDÊNTICO AO MODELO ### */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 10px; /* Um pouco mais de preenchimento para ficar mais bonito */
+      background-color: #333; /* Copiado do modelo */
+      color: white; /* Copiado do modelo */
+      position: fixed; /* Copiado do modelo para ficar "colado" embaixo */
+      bottom: 0;
+      left: 0;
+      font-size: 14px; /* Copiado do modelo */
     }
+
   </style>
 </head>
-<body data-theme="light">
-  <div class="container">
-    <button class="theme-toggle" onclick="toggleTheme()">🌓 Mudar Tema</button>
+<body>
 
-    <h1>
-      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M9 2h6a2 2 0 0 1 2 2v1H7V4a2 2 0 0 1 2-2zm10 5H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h12z"/>
-      </svg>
-      Gerador Automático de Relatório
-    </h1>
-
-    <p>Cole a transcrição completa da conversa abaixo e clique em <strong>"Gerar Relatório"</strong>.</p>
-
-    <textarea id="conversa" placeholder="Cole a conversa do chat aqui..."></textarea>
-
-    <div style="margin-top: 20px; margin-bottom: 30px;">
-      <button id="gerar-btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M5 20h14v-2H5v2zm7-18L5.33 9h4.34v4h4.66V9h4.34L12 2z"/>
+  <main>
+    <div class="container">
+      <h1>
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0d2c54">
+          <path d="M9 2h6a2 2 0 0 1 2 2v1H7V4a2 2 0 0 1 2-2zm10 5H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h12z"/>
         </svg>
-        Gerar Relatório
+        Gerador Automático de Relato de atendimento
+      </h1>
+
+      <p>Cole a transcrição completa da conversa abaixo e clique em <strong>"Gerar Relatório"</strong>.</p>
+
+      <textarea id="conversa" placeholder="Cole a conversa do chat aqui..."></textarea>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 30px;">
+        <button id="gerar-btn" style="background-color: #0057c2;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M5 20h14v-2H5v2zm7-18L5.33 9h4.34v4h4.66V9h4.34L12 2z"/>
+          </svg>
+          Gerar Relatório
+        </button>
+
+        <button id="limpar-btn" style="background-color: #6c757d;">
+          🧹 Limpar
+        </button>
+      </div>
+
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+
+      <h2>
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0d2c54">
+          <path d="M3 6l3 1v13l-3-1V6zm18 0v13l-3 1V7l3-1zM8 4h8v16H8V4z"/>
+        </svg>
+        Relato Gerado
+      </h2>
+
+      <button id="copiar-btn" style="margin-bottom: 10px; background-color: #28a745;">
+        📋 Copiar Relatório
       </button>
+
+      <textarea id="resultado" readonly placeholder="Seu relatório formatado aparecerá aqui..."></textarea>
     </div>
+  </main>
+  
+  <footer>
+    Todos os direitos reservados - 2025 - PP
+  </footer>
 
-    <hr />
-
-    <h2>
-      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M3 6l3 1v13l-3-1V6zm18 0v13l-3 1V7l3-1zM8 4h8v16H8V4z"/>
-      </svg>
-      Relatório Gerado
-    </h2>
-
-    <textarea id="resultado" readonly placeholder="Seu relatório formatado aparecerá aqui..."></textarea>
-  </div>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
