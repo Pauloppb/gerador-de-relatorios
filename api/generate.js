@@ -1,4 +1,4 @@
-// CÓDIGO FINAL E COMPLETO COM TODOS OS REFINAMENTOS
+// CÓDIGO FINAL E COMPLETO COM O ÚLTIMO REFINAMENTO NO PROMPT
 
 // --- Lógica para a API da Groq com JSON ---
 async function handleGroqRequest(apiKey, conversa, promptJson) {
@@ -74,7 +74,7 @@ export default async function handler(request, response) {
   const { conversa } = request.body;
   if (!conversa) { return response.status(400).json({ error: 'Nenhuma conversa foi fornecida.' }); }
     
-  // --- PROMPT JSON COM O ÚLTIMO REFINAMENTO ---
+  // --- PROMPT JSON COM O AJUSTE FINAL PARA NOMES INCOMUNS ---
   const promptJson = `
 Sua tarefa é extrair informações de uma transcrição de chat e retornar um objeto JSON. NÃO retorne nada além do objeto JSON.
 O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente", "procedimentos_realizados", "nome_cliente", "telefone_cliente", "protocolo_opa".
@@ -82,7 +82,7 @@ O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente"
 ### Regras de Preenchimento:
 - "relato_cliente": Um resumo conciso do problema inicial do cliente.
 - "procedimentos_realizados": Descreva os passos técnicos de forma objetiva, usando frases diretas. Comece com as ações realizadas no sistema e depois as orientações dadas ao cliente. Fale sempre em primeira pessoa (ex: "Realizei um reset...", "Orientei o cliente a...").
-- "nome_cliente": Extraia o nome do cliente. O atendente se chama Paulo Brito. O cliente é a outra pessoa na conversa. Se não encontrar, use "-".
+- "nome_cliente": Extraia o nome do cliente, que é a outra pessoa na conversa além do atendente Paulo Brito. O nome pode ser incomum ou um nome de usuário. Se não encontrar, use "-".
 - "telefone_cliente": Extraia o telefone do cliente. Se não encontrar, use "-".
 - "protocolo_opa": Extraia o número do protocolo OPA. Se não encontrar, use "-".
 
