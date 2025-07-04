@@ -1,4 +1,4 @@
-// Este é o código final com a última correção para forçar a formatação.
+// Este é o código da Estratégia 1, trocando o modelo para o Mixtral.
 
 // --- Lógica para a API da Groq ---
 async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
@@ -11,10 +11,10 @@ async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
         content: promptDoSistema + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa 
       }
     ],
-    // --- MUDANÇA 1: Usando um modelo muito mais poderoso ---
-    model: 'llama3-70b-8192',
+    // --- AQUI ESTÁ A ÚNICA MUDANÇA ---
+    // Trocamos o modelo da família Llama 3 pelo Mixtral.
+    model: 'mixtral-8x7b-32768',
     
-    // --- MUDANÇA 2: Forçando a IA a ser menos criativa e mais obediente ---
     temperature: 0,
   };
 
@@ -77,27 +77,4 @@ RELATO DO CLIENTE:
 PROCEDIMENTOS REALIZADOS:
 [Descreva aqui os passos técnicos que o atendente realizou para solucionar o problema. Inclua o diagnóstico e a solução aplicada. Se o atendente deu alguma instrução ao cliente, mencione-a aqui.]
 
-Nome do Cliente: [Extraia o nome do cliente da conversa]
-Usuário e Senha de Acesso ao Roteador: -
-Telefone do Cliente: [Extraia o telefone do cliente da conversa]
-Protocolo OPA [Extraia o número de protocolo da conversa]
-`;
-
-  try {
-    let relatorioGerado;
-    
-    if (process.env.AI_PROVIDER === 'groq') {
-      console.log("Usando provedor: Groq (Modelo 70b)");
-      relatorioGerado = await handleGroqRequest(process.env.GROQ_API_KEY, conversa, promptDoSistema);
-    } else {
-      console.log("Usando provedor: Gemini (padrão)");
-      relatorioGerado = await handleGeminiRequest(process.env.GEMINI_API_KEY, conversa, promptDoSistema);
-    }
-    
-    return response.status(200).json({ report: relatorioGerado });
-
-  } catch (error) {
-    console.error("Erro detalhado no servidor:", error);
-    return response.status(500).json({ error: `Erro interno do servidor: ${error.message}` });
-  }
-}
+Nome do Cliente: [Extraia o nome do cliente da conversa
