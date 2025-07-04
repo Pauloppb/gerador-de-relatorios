@@ -1,13 +1,9 @@
-// Este é o código final e CORRIGIDO para o arquivo: api/generate.js
-// A alteração foi na função handleGroqRequest para garantir que o prompt seja seguido.
+// Este é o código final com a última correção para forçar a formatação.
 
 // --- Lógica para a API da Groq ---
 async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
   const url = 'https://api.groq.com/openai/v1/chat/completions';
   
-  // AQUI ESTÁ A CORREÇÃO:
-  // Juntamos o prompt do sistema e a conversa na mesma mensagem de 'user'.
-  // Isso força o modelo Llama 3 a seguir as instruções de formatação rigorosamente.
   const corpoDaRequisicao = {
     messages: [
       { 
@@ -15,7 +11,11 @@ async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
         content: promptDoSistema + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa 
       }
     ],
-    model: 'llama3-8b-8192',
+    // --- MUDANÇA 1: Usando um modelo muito mais poderoso ---
+    model: 'llama3-70b-8192',
+    
+    // --- MUDANÇA 2: Forçando a IA a ser menos criativa e mais obediente ---
+    temperature: 0,
   };
 
   const response = await fetch(url, {
@@ -87,7 +87,7 @@ Protocolo OPA [Extraia o número de protocolo da conversa]
     let relatorioGerado;
     
     if (process.env.AI_PROVIDER === 'groq') {
-      console.log("Usando provedor: Groq");
+      console.log("Usando provedor: Groq (Modelo 70b)");
       relatorioGerado = await handleGroqRequest(process.env.GROQ_API_KEY, conversa, promptDoSistema);
     } else {
       console.log("Usando provedor: Gemini (padrão)");
