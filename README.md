@@ -1,4 +1,4 @@
-# 🧠 Gerador Automático de Relato de Atendimento
+# Gerador Automático de Relato de Atendimento
 
 ![Hospedado na Vercel](https://img.shields.io/badge/Hospedado%20na-Vercel-black?style=for-the-badge&logo=vercel)
 ![JavaScript](https://img.shields.io/badge/Javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
@@ -88,4 +88,3 @@ Acesse: `http://localhost:3000`
 ## 🧑‍💻 Autor
 
 Desenvolvido por **Paulo Pereira** – 2025  
-Com o apoio das APIs **Google Gemini** e **Groq LLaMA 3**.
