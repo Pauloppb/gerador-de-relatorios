@@ -1,4 +1,4 @@
-// CÓDIGO FINAL COM ESTRATÉGIA JSON E MODELO RÁPIDO
+// CÓDIGO FINAL E COMPLETO COM TODOS OS REFINAMENTOS
 
 // --- Lógica para a API da Groq com JSON ---
 async function handleGroqRequest(apiKey, conversa, promptJson) {
@@ -11,10 +11,7 @@ async function handleGroqRequest(apiKey, conversa, promptJson) {
         content: promptJson + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa 
       }
     ],
-    // --- AQUI ESTÁ O AJUSTE: Voltando para o modelo mais rápido ---
-    // A tarefa de gerar JSON é mais fácil, então este modelo deve dar conta dentro do tempo limite.
     model: 'llama3-8b-8192',
-    
     temperature: 0,
     response_format: { "type": "json_object" },
   };
@@ -54,17 +51,30 @@ Protocolo OPA: ${dadosDoRelatorio.protocolo_opa}`;
 
 // --- Lógica para a API do Gemini ---
 async function handleGeminiRequest(apiKey, conversa, promptDoSistema) {
-  // ... (código da função do Gemini sem alterações) ...
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptDoSistema + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa }] }]
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erro da API do Google: ${errorText}`);
+  }
+  const data = await response.json();
+  return data.candidates[0].content.parts[0].text;
 }
 
 
 // --- Handler Principal ---
 export default async function handler(request, response) {
-  // ... (código do handler sem alterações, apenas o promptJson será usado de forma diferente agora) ...
-
+  if (request.method !== 'POST') { return response.status(405).json({ message: 'Apenas o método POST é permitido' }); }
   const { conversa } = request.body;
   if (!conversa) { return response.status(400).json({ error: 'Nenhuma conversa foi fornecida.' }); }
     
+  // --- PROMPT JSON COM O ÚLTIMO REFINAMENTO ---
   const promptJson = `
 Sua tarefa é extrair informações de uma transcrição de chat e retornar um objeto JSON. NÃO retorne nada além do objeto JSON.
 O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente", "procedimentos_realizados", "nome_cliente", "telefone_cliente", "protocolo_opa".
@@ -72,7 +82,7 @@ O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente"
 ### Regras de Preenchimento:
 - "relato_cliente": Um resumo conciso do problema inicial do cliente.
 - "procedimentos_realizados": Descreva os passos técnicos de forma objetiva, usando frases diretas. Comece com as ações realizadas no sistema e depois as orientações dadas ao cliente. Fale sempre em primeira pessoa (ex: "Realizei um reset...", "Orientei o cliente a...").
-- "nome_cliente": Extraia o nome do cliente. Se não encontrar, use "-".
+- "nome_cliente": Extraia o nome do cliente. O atendente se chama Paulo Brito. O cliente é a outra pessoa na conversa. Se não encontrar, use "-".
 - "telefone_cliente": Extraia o telefone do cliente. Se não encontrar, use "-".
 - "protocolo_opa": Extraia o número do protocolo OPA. Se não encontrar, use "-".
 
