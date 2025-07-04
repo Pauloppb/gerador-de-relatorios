@@ -1,22 +1,30 @@
-// Este é o código final e completo para o arquivo: api/generate.js
-// Ele contém a lógica para as APIs da Groq e do Gemini.
+// Este é o código final e CORRIGIDO para o arquivo: api/generate.js
+// A alteração foi na função handleGroqRequest para garantir que o prompt seja seguido.
 
 // --- Lógica para a API da Groq ---
 async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
   const url = 'https://api.groq.com/openai/v1/chat/completions';
+  
+  // AQUI ESTÁ A CORREÇÃO:
+  // Juntamos o prompt do sistema e a conversa na mesma mensagem de 'user'.
+  // Isso força o modelo Llama 3 a seguir as instruções de formatação rigorosamente.
+  const corpoDaRequisicao = {
+    messages: [
+      { 
+        role: 'user', 
+        content: promptDoSistema + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa 
+      }
+    ],
+    model: 'llama3-8b-8192',
+  };
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: promptDoSistema },
-        { role: 'user', content: conversa }
-      ],
-      model: 'llama3-8b-8192',
-    }),
+    body: JSON.stringify(corpoDaRequisicao),
   });
   if (!response.ok) {
     const errorText = await response.text();
@@ -28,7 +36,6 @@ async function handleGroqRequest(apiKey, conversa, promptDoSistema) {
 
 // --- Lógica para a API do Gemini ---
 async function handleGeminiRequest(apiKey, conversa, promptDoSistema) {
-  // A URL da API do Google agora usa a chave diretamente no final
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: 'POST',
@@ -36,7 +43,6 @@ async function handleGeminiRequest(apiKey, conversa, promptDoSistema) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      // Para o Gemini, o ideal é concatenar o prompt de sistema com a conversa do usuário
       contents: [{ parts: [{ text: promptDoSistema + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa }] }]
     }),
   });
@@ -60,7 +66,6 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: 'Nenhuma conversa foi fornecida.' });
   }
     
-  // O prompt do sistema é definido uma vez e usado por ambas as funções
   const promptDoSistema = `
 Você é um assistente de suporte técnico altamente eficiente. Sua principal tarefa é ler a transcrição de uma conversa de chat entre um atendente e um cliente e, a partir dela, preencher um relatório de atendimento de forma estruturada e concisa.
 
@@ -81,21 +86,18 @@ Protocolo OPA [Extraia o número de protocolo da conversa]
   try {
     let relatorioGerado;
     
-    // A mágica acontece aqui: decidimos qual IA usar com base na variável de ambiente
     if (process.env.AI_PROVIDER === 'groq') {
       console.log("Usando provedor: Groq");
-      // Para a Groq, passamos o prompt de sistema e a conversa separadamente
       relatorioGerado = await handleGroqRequest(process.env.GROQ_API_KEY, conversa, promptDoSistema);
     } else {
       console.log("Usando provedor: Gemini (padrão)");
-      // Para o Gemini, passamos a chave da API do Gemini e juntamos o prompt com a conversa
       relatorioGerado = await handleGeminiRequest(process.env.GEMINI_API_KEY, conversa, promptDoSistema);
     }
     
     return response.status(200).json({ report: relatorioGerado });
 
   } catch (error) {
-    console.error("Erro detalhado no servidor:", error); // Adicionado para melhor depuração
+    console.error("Erro detalhado no servidor:", error);
     return response.status(500).json({ error: `Erro interno do servidor: ${error.message}` });
   }
 }
