@@ -24,4 +24,4 @@ Este projeto é uma ferramenta web que utiliza Inteligência Artificial para tra
 - **Hospedagem:** Vercel
 
 ---
-Criado por **Paulippo**.
+Criado por **Pauloppb**.
