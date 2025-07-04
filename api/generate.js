@@ -1,5 +1,4 @@
-// CÓDIGO FINAL E DEFINITIVO USANDO A ESTRATÉGIA JSON
-// Esta é a abordagem profissional e à prova de falhas.
+// CÓDIGO FINAL USANDO A ESTRATÉGIA JSON E UM MODELO ATIVO
 
 // --- Lógica para a API da Groq com JSON ---
 async function handleGroqRequest(apiKey, conversa, promptJson) {
@@ -12,10 +11,10 @@ async function handleGroqRequest(apiKey, conversa, promptJson) {
         content: promptJson + "\n\n--- CONVERSA PARA ANALISAR ---\n\n" + conversa 
       }
     ],
-    // Usaremos o Mixtral que é ótimo para tarefas estruturadas.
-    model: 'mixtral-8x7b-32768',
+    // --- A ÚNICA MUDANÇA É AQUI: Escolhendo um modelo ativo e poderoso ---
+    model: 'llama3-70b-8192',
+    
     temperature: 0,
-    // NOVO E CRUCIAL: Instruindo a IA que a resposta DEVE ser em formato JSON.
     response_format: { "type": "json_object" },
   };
 
@@ -34,13 +33,9 @@ async function handleGroqRequest(apiKey, conversa, promptJson) {
   }
 
   const data = await response.json();
-  // Pega o conteúdo, que agora é uma string contendo o JSON
   const jsonString = data.choices[0].message.content;
-  
-  // 1. O CÓDIGO INTERPRETA (FAZ O "PARSE") DA STRING JSON PARA UM OBJETO
   const dadosDoRelatorio = JSON.parse(jsonString);
 
-  // 2. O CÓDIGO MONTA O RELATÓRIO FINAL, COM CONTROLE TOTAL SOBRE O FORMATO
   const relatorioFinal = `RELATO DO CLIENTE:
 ${dadosDoRelatorio.relato_cliente}
 
@@ -81,7 +76,6 @@ export default async function handler(request, response) {
   const { conversa } = request.body;
   if (!conversa) { return response.status(400).json({ error: 'Nenhuma conversa foi fornecida.' }); }
     
-  // --- PROMPT NOVO E ESPECÍFICO PARA A TAREFA JSON (USADO PELA GROQ) ---
   const promptJson = `
 Sua tarefa é extrair informações de uma transcrição de chat e retornar um objeto JSON. NÃO retorne nada além do objeto JSON.
 O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente", "procedimentos_realizados", "nome_cliente", "telefone_cliente", "protocolo_opa".
@@ -95,7 +89,6 @@ O objeto JSON deve ter as seguintes chaves, todas como strings: "relato_cliente"
 Analise a conversa abaixo e gere o objeto JSON correspondente.
 `;
   
-  // Este prompt antigo agora só será usado pelo Gemini
   const promptAntigo = `
 Você é um assistente de suporte técnico altamente eficiente. Sua principal tarefa é ler a transcrição de uma conversa de chat entre um atendente e um cliente e, a partir dela, preencher um relatório de atendimento de forma estruturada e concisa.
 
@@ -117,7 +110,7 @@ Protocolo OPA: [Extraia o número de protocolo da conversa]
     let relatorioGerado;
     
     if (process.env.AI_PROVIDER === 'groq') {
-      console.log("Usando provedor: Groq (Estratégia JSON)");
+      console.log("Usando provedor: Groq (JSON com Llama3 70b)");
       relatorioGerado = await handleGroqRequest(process.env.GROQ_API_KEY, conversa, promptJson);
     } else {
       console.log("Usando provedor: Gemini (padrão)");
