@@ -1,281 +1,316 @@
-// =======================================================
-// GERADOR DE RELATÓRIO - VERSÃO MELHORADA
-// =======================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- CONFIGURAÇÕES ---
-    const CONFIG = {
-        API_URL: '/api/generate',
-        TIMEOUTS: {
-            COPY_FEEDBACK: 2000,
-            REQUEST_TIMEOUT: 30000 // 30 segundos
-        },
-        LIMITS: {
-            MAX_CHARS: 50000 // Limite de caracteres
-        },
-        MESSAGES: {
-            EMPTY_CONVERSATION: 'Por favor, cole a conversa na primeira caixa de texto.',
-            LOADING: 'Aguarde um instante, a Inteligência Artificial está trabalhando...',
-            NOTHING_TO_COPY: 'Não há nada para copiar ainda.',
-            ERROR_ALERT: 'Houve um erro. Verifique o console (F12) para mais detalhes.',
-            TOO_LONG: 'A conversa é muito longa. Limite máximo: 50.000 caracteres.',
-            NO_CONNECTION: 'Sem conexão com a internet. Verifique sua conexão.'
-        }
-    };
-
-    // --- ELEMENTOS DOM ---
-    const elementos = {
-        botaoGerar: document.getElementById('gerar-btn'),
-        botaoGerarTexto: document.getElementById('gerar-btn-text'),
-        campoConversa: document.getElementById('conversa'),
-        campoResultado: document.getElementById('resultado'),
-        botaoCopiar: document.getElementById('copiar-btn'),
-        botaoLimpar: document.getElementById('limpar-btn'),
-        anoAtual: document.getElementById('current-year')
-    };
-
-    // --- INICIALIZAÇÃO ---
-    function inicializar() {
-        // Atualiza o ano no rodapé
-        if (elementos.anoAtual) {
-            elementos.anoAtual.textContent = new Date().getFullYear();
-        }
-
-        // Adiciona contador de caracteres
-        adicionarContadorCaracteres();
+// --- SISTEMA DE TOASTS ---
+class ToastManager {
+    static mostrar(mensagem, tipo = 'info', duracao = 3000) {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${tipo}`;
         
-        // Configura event listeners
-        configurarEventListeners();
-    }
-
-    // --- CONTADOR DE CARACTERES ---
-    function adicionarContadorCaracteres() {
-        const contador = document.createElement('div');
-        contador.id = 'char-counter';
-        contador.className = 'text-sm text-gray-500 mt-1';
-        elementos.campoConversa.parentNode.appendChild(contador);
+        const icones = {
+            success: 'check-circle',
+            error: 'exclamation-circle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
         
-        function atualizarContador() {
-            const count = elementos.campoConversa.value.length;
-            const max = CONFIG.LIMITS.MAX_CHARS;
-            contador.textContent = `${count.toLocaleString()}/${max.toLocaleString()} caracteres`;
-            contador.style.color = count > max ? '#ef4444' : '#6b7280';
-        }
+        toast.innerHTML = `
+            <i class="fas fa-${icones[tipo] || 'info-circle'}"></i>
+            <span>${mensagem}</span>
+        `;
         
-        elementos.campoConversa.addEventListener('input', atualizarContador);
-        atualizarContador();
-    }
-
-    // --- VALIDAÇÕES ---
-    function validarEntrada(conversa) {
-        if (!conversa || conversa.trim() === '') {
-            throw new Error(CONFIG.MESSAGES.EMPTY_CONVERSATION);
-        }
+        document.body.appendChild(toast);
         
-        if (conversa.length > CONFIG.LIMITS.MAX_CHARS) {
-            throw new Error(CONFIG.MESSAGES.TOO_LONG);
-        }
-        
-        if (!navigator.onLine) {
-            throw new Error(CONFIG.MESSAGES.NO_CONNECTION);
-        }
-        
-        return true;
-    }
-
-    // --- FUNÇÃO PRINCIPAL PARA GERAR RELATÓRIO ---
-    async function gerarRelatorio() {
-        const conversa = elementos.campoConversa.value;
-        
-        try {
-            // Validações
-            validarEntrada(conversa);
-            
-            // UI: Estado de carregamento
-            definirEstadoCarregamento(true);
-            
-            // Faz a requisição
-            const relatorio = await chamarAPI(conversa);
-            
-            // Exibe o resultado
-            elementos.campoResultado.value = relatorio.trim();
-            
-        } catch (error) {
-            tratarErro(error);
-        } finally {
-            definirEstadoCarregamento(false);
-        }
-    }
-
-    // --- CHAMADA PARA API ---
-    async function chamarAPI(conversa) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUTS.REQUEST_TIMEOUT);
-        
-        try {
-            const response = await fetch(CONFIG.API_URL, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ conversa }),
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Erro ${response.status}: ${errorText}`);
-            }
-            
-            const data = await response.json();
-            
-            if (!data.report) {
-                throw new Error('Resposta da API inválida');
-            }
-            
-            return data.report;
-            
-        } catch (error) {
-            clearTimeout(timeoutId);
-            
-            if (error.name === 'AbortError') {
-                throw new Error('Tempo limite excedido. Tente novamente.');
-            }
-            
-            throw error;
-        }
-    }
-
-    // --- GERENCIAMENTO DE ESTADO DA UI ---
-    function definirEstadoCarregamento(carregando) {
-        if (carregando) {
-            elementos.botaoGerar.disabled = true;
-            elementos.botaoGerarTexto.innerHTML = '<i class="fas fa-circle-notch icon-spin mr-2"></i> Gerando...';
-            elementos.campoResultado.value = CONFIG.MESSAGES.LOADING;
-        } else {
-            elementos.botaoGerar.disabled = false;
-            elementos.botaoGerarTexto.innerHTML = '<i class="fas fa-magic mr-2"></i> Gerar Relatório';
-        }
-    }
-
-    // --- TRATAMENTO DE ERROS ---
-    function tratarErro(error) {
-        console.error("Erro detalhado:", {
-            message: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
+        // Animação de entrada
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
         });
         
-        // Mensagens específicas para o usuário
-        let mensagemUsuario = error.message;
+        // Remove após a duração especificada
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, duracao);
+    }
+}
+
+// --- GERENCIADOR DE ESTADOS VISUAIS ---
+class UIStateManager {
+    static adicionarClasses(elemento, classes, duracao = 3000) {
+        if (typeof classes === 'string') classes = [classes];
         
-        if (error.message.includes('500')) {
-            mensagemUsuario = 'Erro interno do servidor. Tente novamente em alguns instantes.';
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-            mensagemUsuario = 'Problema de conexão. Verifique sua internet e tente novamente.';
-        } else if (error.message.includes('404')) {
-            mensagemUsuario = 'Serviço temporariamente indisponível. Tente novamente mais tarde.';
-        }
+        elemento.classList.add(...classes);
         
-        elementos.campoResultado.value = `Erro: ${mensagemUsuario}`;
-        
-        // Só mostra alert para erros de validação
-        if (error.message === CONFIG.MESSAGES.EMPTY_CONVERSATION || 
-            error.message === CONFIG.MESSAGES.TOO_LONG) {
-            alert(mensagemUsuario);
+        if (duracao > 0) {
+            setTimeout(() => {
+                elemento.classList.remove(...classes);
+            }, duracao);
         }
     }
-
-    // --- FUNÇÃO DE CÓPIA MELHORADA ---
-    async function copiarTexto() {
-        if (elementos.campoResultado.value.trim() === '') {
-            alert(CONFIG.MESSAGES.NOTHING_TO_COPY);
-            return;
-        }
-
-        try {
-            await navigator.clipboard.writeText(elementos.campoResultado.value);
-            mostrarFeedbackCopia();
-        } catch (err) {
-            console.warn('Clipboard API falhou, usando fallback:', err);
-            // Fallback para navegadores mais antigos
-            copiarComFallback();
-        }
+    
+    static mostrarSucesso(elemento, mensagem) {
+        this.adicionarClasses(elemento, ['campo-sucesso']);
+        if (mensagem) ToastManager.mostrar(mensagem, 'success');
     }
+    
+    static mostrarErro(elemento, mensagem) {
+        this.adicionarClasses(elemento, ['campo-erro']);
+        if (mensagem) ToastManager.mostrar(mensagem, 'error');
+    }
+}
 
-    function copiarComFallback() {
-        elementos.campoResultado.select();
-        elementos.campoResultado.setSelectionRange(0, 99999); // Para mobile
+// --- PROGRESS BAR ANIMADA ---
+class ProgressBar {
+    constructor(container) {
+        this.container = container;
+        this.element = null;
+        this.interval = null;
+    }
+    
+    criar() {
+        if (this.element) return;
         
-        try {
-            document.execCommand('copy');
-            mostrarFeedbackCopia();
-        } catch (err) {
-            console.error('Fallback de cópia também falhou:', err);
-            alert('Não foi possível copiar automaticamente. Selecione o texto e copie manualmente (Ctrl+C).');
-        }
+        this.element = document.createElement('div');
+        this.element.className = 'progress-container';
+        this.element.innerHTML = `
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        `;
+        
+        this.container.appendChild(this.element);
     }
-
-    function mostrarFeedbackCopia() {
-        const originalText = elementos.botaoCopiar.innerHTML;
-        elementos.botaoCopiar.innerHTML = '<i class="fas fa-check mr-1"></i> Copiado!';
-        elementos.botaoCopiar.disabled = true;
+    
+    iniciar() {
+        if (!this.element) this.criar();
+        
+        const fill = this.element.querySelector('.progress-fill');
+        this.element.classList.add('ativo');
+        
+        let progresso = 0;
+        this.interval = setInterval(() => {
+            progresso += Math.random() * 15;
+            if (progresso > 90) progresso = 90;
+            
+            fill.style.width = progresso + '%';
+            fill.classList.add('animando');
+        }, 500);
+    }
+    
+    concluir() {
+        if (!this.element) return;
+        
+        const fill = this.element.querySelector('.progress-fill');
+        fill.style.width = '100%';
+        
+        clearInterval(this.interval);
         
         setTimeout(() => {
-            elementos.botaoCopiar.innerHTML = originalText;
-            elementos.botaoCopiar.disabled = false;
-        }, CONFIG.TIMEOUTS.COPY_FEEDBACK);
-    }
-
-    // --- FUNÇÃO LIMPAR ---
-    function limparCampos() {
-        elementos.campoConversa.value = '';
-        elementos.campoResultado.value = '';
-        elementos.campoConversa.focus();
-        
-        // Atualiza o contador de caracteres
-        elementos.campoConversa.dispatchEvent(new Event('input'));
-    }
-
-    // --- CONFIGURAÇÃO DE EVENT LISTENERS ---
-    function configurarEventListeners() {
-        elementos.botaoGerar.addEventListener('click', gerarRelatorio);
-        elementos.botaoLimpar.addEventListener('click', limparCampos);
-        elementos.botaoCopiar.addEventListener('click', copiarTexto);
-        
-        // Atalhos de teclado
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                switch(e.key) {
-                    case 'Enter':
-                        if (elementos.campoConversa === document.activeElement) {
-                            e.preventDefault();
-                            gerarRelatorio();
-                        }
-                        break;
-                    case 'l':
-                        if (!elementos.campoConversa.contains(document.activeElement) && 
-                            !elementos.campoResultado.contains(document.activeElement)) {
-                            e.preventDefault();
-                            limparCampos();
-                        }
-                        break;
+            this.element.classList.remove('ativo');
+            setTimeout(() => {
+                if (this.element) {
+                    this.element.remove();
+                    this.element = null;
                 }
+            }, 300);
+        }, 500);
+    }
+}
+
+// --- CONTADOR DE CARACTERES MELHORADO ---
+class ContadorCaracteres {
+    constructor(textarea, limite = 50000) {
+        this.textarea = textarea;
+        this.limite = limite;
+        this.contador = null;
+        this.init();
+    }
+    
+    init() {
+        this.criarContador();
+        this.textarea.addEventListener('input', () => this.atualizar());
+        this.atualizar();
+    }
+    
+    criarContador() {
+        this.contador = document.createElement('div');
+        this.contador.id = 'char-counter';
+        this.contador.className = 'char-counter';
+        this.textarea.parentNode.appendChild(this.contador);
+    }
+    
+    atualizar() {
+        const count = this.textarea.value.length;
+        const porcentagem = (count / this.limite) * 100;
+        
+        this.contador.textContent = `${count.toLocaleString()} / ${this.limite.toLocaleString()} caracteres`;
+        
+        // Cores baseadas na porcentagem
+        if (porcentagem > 100) {
+            this.contador.style.color = '#ef4444';
+            this.contador.classList.add('limite-excedido');
+        } else if (porcentagem > 80) {
+            this.contador.style.color = '#f59e0b';
+            this.contador.classList.remove('limite-excedido');
+        } else {
+            this.contador.style.color = '#6b7280';
+            this.contador.classList.remove('limite-excedido');
+        }
+        
+        return count <= this.limite;
+    }
+}
+
+// --- EFEITOS DE LOADING MELHORADOS ---
+class LoadingEffects {
+    static adicionarRipple(button) {
+        button.classList.add('btn-ripple');
+        
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+    }
+    
+    static criarOverlay(container) {
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+                <p class="mt-2">Processando...</p>
+            </div>
+        `;
+        
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+        
+        return {
+            mostrar: () => overlay.classList.add('ativo'),
+            esconder: () => overlay.classList.remove('ativo'),
+            remover: () => overlay.remove()
+        };
+    }
+}
+
+// --- AUTO-RESIZE INTELIGENTE PARA TEXTAREA ---
+class AutoResize {
+    constructor(textarea, minHeight = 120, maxHeight = 400) {
+        this.textarea = textarea;
+        this.minHeight = minHeight;
+        this.maxHeight = maxHeight;
+        this.init();
+    }
+    
+    init() {
+        this.textarea.style.minHeight = this.minHeight + 'px';
+        this.textarea.style.resize = 'none';
+        this.textarea.style.overflow = 'hidden';
+        
+        this.textarea.addEventListener('input', () => this.resize());
+        this.resize(); // Resize inicial
+    }
+    
+    resize() {
+        this.textarea.style.height = 'auto';
+        
+        const newHeight = Math.min(
+            Math.max(this.textarea.scrollHeight, this.minHeight),
+            this.maxHeight
+        );
+        
+        this.textarea.style.height = newHeight + 'px';
+        
+        if (this.textarea.scrollHeight > this.maxHeight) {
+            this.textarea.style.overflow = 'auto';
+        } else {
+            this.textarea.style.overflow = 'hidden';
+        }
+    }
+}
+
+// --- MELHORIAS PARA ACESSIBILIDADE ---
+class AccessibilityEnhancer {
+    static adicionarAtributos(elementos) {
+        // Adiciona ARIA labels e roles
+        if (elementos.botaoGerar) {
+            elementos.botaoGerar.setAttribute('aria-describedby', 'gerar-help');
+            elementos.botaoGerar.setAttribute('role', 'button');
+        }
+        
+        if (elementos.campoConversa) {
+            elementos.campoConversa.setAttribute('aria-label', 'Cole aqui a conversa para gerar o relatório');
+            elementos.campoConversa.setAttribute('aria-required', 'true');
+        }
+        
+        if (elementos.campoResultado) {
+            elementos.campoResultado.setAttribute('aria-label', 'Resultado do relatório gerado');
+            elementos.campoResultado.setAttribute('readonly', 'true');
+        }
+    }
+    
+    static adicionarFocusManagement(elementos) {
+        // Gerencia foco para melhor navegação por teclado
+        elementos.botaoGerar.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                elementos.botaoGerar.click();
             }
         });
-
-        // Auto-resize do textarea
-        elementos.campoConversa.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 400) + 'px';
-        });
     }
+}
 
-    // --- INICIALIZA A APLICAÇÃO ---
-    inicializar();
-});
+// --- VALIDAÇÃO VISUAL EM TEMPO REAL ---
+class RealTimeValidator {
+    constructor(campo, validadores = []) {
+        this.campo = campo;
+        this.validadores = validadores;
+        this.init();
+    }
+    
+    init() {
+        this.campo.addEventListener('input', () => this.validar());
+        this.campo.addEventListener('blur', () => this.validar());
+    }
+    
+    validar() {
+        const valor = this.campo.value;
+        const erros = [];
+        
+        for (const validador of this.validadores) {
+            const resultado = validador(valor);
+            if (resultado !== true) {
+                erros.push(resultado);
+            }
+        }
+        
+        if (erros.length > 0) {
+            UIStateManager.mostrarErro(this.campo);
+            return false;
+        } else {
+            this.campo.classList.remove('campo-erro');
+            return true;
+        }
+    }
+}
+
+// --- EXPORTAR PARA USO GLOBAL ---
+window.UIComponents = {
+    ToastManager,
+    UIStateManager,
+    ProgressBar,
+    ContadorCaracteres,
+    LoadingEffects,
+    AutoResize,
+    AccessibilityEnhancer,
+    RealTimeValidator
+};
