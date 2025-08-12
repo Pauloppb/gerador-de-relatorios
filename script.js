@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // testConectividadeAPI();
 });
 
-// --- FUNÇÃO DE TESTE DE CONECTIVIDADE (OPCIONAL) ---
+// --- FUNÇÃO DE TESTE DE CONECTIVIDADE NO CONSOLE
 async function testConectividadeAPI() {
     console.log('🔬 Testando conectividade com a API...');
     
@@ -230,3 +230,4 @@ async function testConectividadeAPI() {
         console.warn('⚠️ Não foi possível conectar com a API:', error.message);
     }
 }
+
